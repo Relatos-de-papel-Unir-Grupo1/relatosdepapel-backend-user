@@ -23,7 +23,7 @@ public class AuthService {
     private final JwtUtils jwtUtils;
 
     public Optional<String> createPhanthomToken(String username, String password) {
-        Optional<User> userOptional = userRepository.findByCif(username);
+        Optional<User> userOptional = userRepository.findByEmail(username);
         if (userOptional.isEmpty()) {
             return Optional.empty();
         }

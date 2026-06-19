@@ -28,7 +28,7 @@ public class UserController {
     private final JwtUtils jwtUtils;
 
     @GetMapping("/{userId}")
-    public ResponseEntity<?> getUserProfile(@PathVariable String userId,
+    public ResponseEntity<?> getUserProfile(@PathVariable Integer userId,
                                           @RequestHeader("accessToken") String token) {
 
         if (token == null) {
@@ -40,7 +40,7 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Token inválido o expirado");
         }
 
-        String tokenUserId = jwtUtils.getCifFromToken(token);
+        Integer tokenUserId = jwtUtils.getUserIdFromToken(token);
         
         if (!tokenUserId.equals(userId)) {
             log.warn("Intento de acceso no autorizado al perfil de usuario: {}", userId);
@@ -48,7 +48,37 @@ public class UserController {
         }
 
         
-        Optional<User> userOptional = userRepository.findByCif(String.valueOf(userId));
+        Optional<User> userOptional = userRepository.findById(Integer.valueOf(userId));
+        if (userOptional.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        User user = userOptional.get();
+        UserDto userDto = new UserDto(
+            user.getName(),
+            user.getEmail(),
+            user.getPhone(),
+            user.getAddress(),
+            user.getCif()            
+        );
+        return ResponseEntity.ok(userDto);
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<?> getUserProfile(@RequestHeader("accessToken") String token) {
+
+        if (token == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Token de autorización requerido");
+        }
+
+        
+        if (!jwtUtils.validateToken(token)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Token inválido o expirado");
+        }
+
+        Integer tokenUserId = jwtUtils.getUserIdFromToken(token);
+        
+        Optional<User> userOptional = userRepository.findById(tokenUserId);
         if (userOptional.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
