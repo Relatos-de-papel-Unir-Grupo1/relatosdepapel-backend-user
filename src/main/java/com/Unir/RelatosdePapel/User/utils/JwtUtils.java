@@ -39,14 +39,14 @@ public class JwtUtils {
         return generateToken(username, userId);
     }
 
-    public String getCifFromToken(String token) {
+    public Integer getUserIdFromToken(String token) {
         try {
             Claims claims = Jwts.parser()
                             .verifyWith(key)
                             .build()
                             .parseSignedClaims(token)
                             .getPayload();
-            return String.valueOf(claims.get("cif", String.class));
+            return Integer.valueOf(claims.get("userId", Integer.class));
         } catch (Exception e) {
             return null;
         }
@@ -58,8 +58,7 @@ public class JwtUtils {
 
         return Jwts.builder()
                 .subject(username)
-                .claim("userId", userId)
-                .claim("cif", username)
+                .claim("userId", userId)                
                 .issuedAt(now)
                 .expiration(expiryDate)
                 .signWith(key)
